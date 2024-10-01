@@ -1,0 +1,285 @@
+Vou organizar onde cada parte do código vai dentro do projeto Android. Abaixo você encontrará a explicação detalhada de onde colocar cada arquivo e seu respectivo código.
+
+### 1. **Arquivo: `MainActivity.kt`**
+   - Local: `app/src/main/java/com/example/verdejar/MainActivity.kt`
+   - Função: Controla a tela principal, onde será exibida a lista de plantas e o botão para adicionar novas plantas.
+
+```kotlin
+package com.example.verdejar
+
+import android.content.Intent
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import android.widget.Button
+import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var plantAdapter: PlantAdapter
+    private lateinit var plantCountTextView: TextView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        plantCountTextView = findViewById(R.id.plant_count)
+        val recyclerView: RecyclerView = findViewById(R.id.plant_recycler_view)
+
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        plantAdapter = PlantAdapter(PlantRepository.getPlants())
+        recyclerView.adapter = plantAdapter
+
+        findViewById<Button>(R.id.add_plant_button).setOnClickListener {
+            val intent = Intent(this, AddPlantActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        plantAdapter.updatePlants(PlantRepository.getPlants())
+        plantCountTextView.text = "Total de plantas: ${PlantRepository.getPlantCount()}"
+    }
+}
+```
+
+---
+
+### 2. **Arquivo: `AddPlantActivity.kt`**
+   - Local: `app/src/main/java/com/example/verdejar/AddPlantActivity.kt`
+   - Função: Controla a tela de adicionar uma nova planta, capturando o nome, data de plantio e nível de cuidado.
+
+```kotlin
+package com.example.verdejar
+
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
+import androidx.appcompat.app.AppCompatActivity
+
+class AddPlantActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_add_plant)
+
+        val plantNameInput: EditText = findViewById(R.id.plant_name_input)
+        val plantDateInput: EditText = findViewById(R.id.plant_date_input)
+        val plantCareLevelInput: Spinner = findViewById(R.id.plant_care_level_input)
+
+        findViewById<Button>(R.id.save_plant_button).setOnClickListener {
+            val name = plantNameInput.text.toString()
+            val date = plantDateInput.text.toString()
+            val careLevel = plantCareLevelInput.selectedItem.toString()
+
+            val newPlant = Plant(name, date, careLevel)
+            PlantRepository.addPlant(newPlant)
+
+            finish()
+        }
+    }
+}
+```
+
+---
+
+### 3. **Arquivo: `activity_main.xml`**
+   - Local: `app/src/main/res/layout/activity_main.xml`
+   - Função: Layout principal da aplicação, onde exibe a lista de plantas e o botão de adicionar planta.
+
+```xml
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/plant_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total de plantas: 0"
+        android:textSize="18sp"
+        android:layout_gravity="center"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/plant_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <Button
+        android:id="@+id/add_plant_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Adicionar Planta"
+        android:layout_gravity="center"/>
+</LinearLayout>
+```
+
+---
+
+### 4. **Arquivo: `activity_add_plant.xml`**
+   - Local: `app/src/main/res/layout/activity_add_plant.xml`
+   - Função: Layout da tela onde será inserida uma nova planta.
+
+```xml
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/plant_name_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nome da Planta"/>
+
+    <EditText
+        android:id="@+id/plant_date_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Data de Plantio"/>
+
+    <Spinner
+        android:id="@+id/plant_care_level_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/care_levels"/>
+
+    <Button
+        android:id="@+id/save_plant_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Salvar Planta"
+        android:layout_gravity="center"/>
+</LinearLayout>
+```
+
+---
+
+### 5. **Arquivo: `item_plant.xml`**
+   - Local: `app/src/main/res/layout/item_plant.xml`
+   - Função: Layout de cada item (planta) dentro da RecyclerView que lista as plantas.
+
+```xml
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/plant_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nome da Planta"/>
+
+    <TextView
+        android:id="@+id/plant_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Data de Plantio"/>
+
+    <TextView
+        android:id="@+id/plant_care_level"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nível de Cuidado"/>
+</LinearLayout>
+```
+
+---
+
+### 6. **Arquivo: `Plant.kt`**
+   - Local: `app/src/main/java/com/example/verdejar/Plant.kt`
+   - Função: Modelo de dados que representa uma planta.
+
+```kotlin
+package com.example.verdejar
+
+data class Plant(
+    val name: String,
+    val plantingDate: String,
+    val careLevel: String,
+    var waterAmount: Int = 0
+)
+```
+
+---
+
+### 7. **Arquivo: `PlantRepository.kt`**
+   - Local: `app/src/main/java/com/example/verdejar/PlantRepository.kt`
+   - Função: Repositório responsável por armazenar a lista de plantas e fornecer funções para manipulá-las.
+
+```kotlin
+package com.example.verdejar
+
+object PlantRepository {
+    private val plants = mutableListOf<Plant>()
+
+    fun addPlant(plant: Plant) {
+        plants.add(plant)
+    }
+
+    fun getPlants(): List<Plant> {
+        return plants
+    }
+
+    fun getPlantCount(): Int {
+        return plants.size
+    }
+}
+```
+
+---
+
+### 8. **Adapter: `PlantAdapter.kt`**
+   - Local: `app/src/main/java/com/example/verdejar/PlantAdapter.kt`
+   - Função: Adapter responsável por fornecer os dados da lista de plantas para a `RecyclerView`.
+
+```kotlin
+package com.example.verdejar
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+
+class PlantAdapter(private var plants: List<Plant>) : RecyclerView.Adapter<PlantAdapter.PlantViewHolder>() {
+
+    class PlantViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val plantName: TextView = view.findViewById(R.id.plant_name)
+        val plantDate: TextView = view.findViewById(R.id.plant_date)
+        val plantCareLevel: TextView = view.findViewById(R.id.plant_care_level)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlantViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_plant, parent, false)
+        return PlantViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: PlantViewHolder, position: Int) {
+        val plant = plants[position]
+        holder.plantName.text = plant.name
+        holder.plantDate.text = plant.plantingDate
+        holder.plantCareLevel.text = plant.careLevel
+    }
+
+    override fun getItemCount(): Int {
+        return plants.size
+    }
+
+    fun updatePlants(newPlants: List<Plant>) {
+        plants = newPlants
+        notifyDataSetChanged()
+    }
+}
